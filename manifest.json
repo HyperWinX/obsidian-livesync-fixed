@@ -1,7 +1,7 @@
 {
     "id": "livesync-fixed",
     "name": "Fixed LiveSync",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "minAppVersion": "1.7.2",
     "description": "Synchronise Obsidian vaults across devices using CouchDB, S3-compatible object storage, or WebRTC peer-to-peer connections. A fork of Self-hosted LiveSync.",
     "author": "HyperWinX",
