@@ -1,7 +1,7 @@
-# Self-hosted LiveSync
+# Fixed LiveSync
 [Japanese docs](./README_ja.md) - [Chinese docs](./README_cn.md).
 
-Self-hosted LiveSync is a community-developed synchronisation plug-in available on all Obsidian-compatible platforms. It leverages robust server solutions such as CouchDB or object storage systems (e.g., MinIO, S3, R2, etc.) to ensure reliable data synchronisation.
+Fixed LiveSync is a fork of [Self-hosted LiveSync](https://github.com/vrtmrz/obsidian-livesync), a community-developed synchronisation plug-in available on all Obsidian-compatible platforms. It leverages robust server solutions such as CouchDB or object storage systems (e.g., MinIO, S3, R2, etc.) to ensure reliable data synchronisation.
 
 Additionally, it supports peer-to-peer synchronisation using WebRTC, enabling devices to exchange notes without a central data-storage server. A signalling relay is still required for peer discovery. See [How peer-to-peer synchronisation works](./docs/p2p.md).
 
