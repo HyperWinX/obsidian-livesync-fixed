@@ -393,13 +393,13 @@ describe("CLI CI selection", () => {
             mkdirSync(bin);
             writeFileSync(join(directory, "manifest.json"), JSON.stringify({ version }));
             writeFileSync(join(bin, "git"), "#!/bin/sh\nprintf 'deadbee\\n'\n", { mode: 0o755 });
-            const script = metadata!.run!.replace("${{ github.repository_owner }}", "test-owner");
-            const result = spawnSync("bash", ["-e", "-c", script], {
+            const result = spawnSync("bash", ["-e", "-c", metadata!.run!], {
                 cwd: directory,
                 env: {
                     ...process.env,
                     GITHUB_OUTPUT: output,
                     REF: ref,
+                    REPOSITORY_OWNER: "Test-Owner",
                     EVENT_NAME: event,
                     DRY_RUN: dryRun,
                     PATH: `${bin}:${process.env.PATH}`,
