@@ -44,26 +44,9 @@ describe("CI workflow path filters", () => {
         expect(matchesAnyPath(patterns, "manifest.json")).toBe(true);
     });
 
-    it.each(["push", "pull_request"] as const)("runs unit CI for required inputs on %s", (trigger) => {
-        const patterns = unitWorkflow.on?.[trigger]?.paths ?? [];
-        const requiredInputs = [
-            "manifest.json",
-            "updates.md",
-            "_tools/bakei18n.ts",
-            "terser.config.mjs",
-            "utils/check-compatibility.js",
-            "utils/livesync-commonlib-version.test.ts",
-            "utils/livesync-commonlib-version.ts",
-            "utils/ci-pages.unit.spec.ts",
-            "utils/cli-ci.unit.spec.ts",
-            ".github/workflows/cli-docker.yml",
-            ".github/workflows/cli-node-tests.yml",
-            ".github/workflows/cli-p2p-tests.yml",
-            ".github/workflows/cli-docker-validation.yml",
-        ];
-
-        expect(requiredInputs.filter((filename) => !matchesAnyPath(patterns, filename))).toEqual([]);
-        expect(matchesAnyPath(patterns, "utils/unrelated.unit.spec.ts")).toBe(false);
+    it.each(["push", "pull_request"] as const)("runs unit CI on %s regardless of changed files", (trigger) => {
+        expect(unitWorkflow.on?.[trigger]).toBeDefined();
+        expect(unitWorkflow.on?.[trigger]?.paths).toBeUndefined();
     });
 });
 

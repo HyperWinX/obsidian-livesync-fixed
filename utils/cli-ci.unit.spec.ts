@@ -320,7 +320,7 @@ describe("CLI CI selection", () => {
             "refs/tags/1.0.36-cli",
             "push",
             "false",
-            true,
+            false,
             ["1.0.36-cli", "1.0-cli", "latest", "1.0.36-sha-deadbee-cli"],
         ],
         [
@@ -328,7 +328,7 @@ describe("CLI CI selection", () => {
             "refs/tags/1.0.36-rc.1-cli",
             "push",
             "false",
-            true,
+            false,
             ["1.0.36-rc.1-cli", "1.0.36-rc.1-sha-deadbee-cli"],
         ],
         [
@@ -336,7 +336,7 @@ describe("CLI CI selection", () => {
             "refs/tags/1.0.36-patch1-cli",
             "push",
             "false",
-            true,
+            false,
             ["1.0.36-patch1-cli", "1.0.36-patch1-sha-deadbee-cli"],
         ],
         [
@@ -344,7 +344,7 @@ describe("CLI CI selection", () => {
             "refs/tags/1.0.36-rc.1-cli",
             "push",
             "false",
-            true,
+            false,
             ["1.0.36-rc.1-cli", "1.0.36-rc.1-sha-deadbee-cli"],
         ],
         [
@@ -352,8 +352,16 @@ describe("CLI CI selection", () => {
             "refs/tags/1.0.37-cli",
             "push",
             "false",
-            true,
+            false,
             ["1.0.37-cli", "1.0-cli", "latest", "1.0.37-sha-deadbee-cli"],
+        ],
+        [
+            "1.0.36",
+            "refs/tags/1.0.36-cli",
+            "workflow_dispatch",
+            "false",
+            true,
+            ["1.0.36-cli", "1.0-cli", "latest", "1.0.36-sha-deadbee-cli"],
         ],
         [
             "1.0.36",
@@ -373,7 +381,7 @@ describe("CLI CI selection", () => {
         ],
         ["1.0.36", "refs/tags/not-a-version-cli", "workflow_dispatch", "true", false, null],
         ["1.0.36", "refs/tags/1.0.36+build-cli", "push", "false", false, null],
-        ["1.0.36", "refs/heads/main", "push", "false", true, ["edge"]],
+        ["1.0.36", "refs/heads/main", "push", "false", false, ["edge"]],
         ["1.0.36", "refs/heads/test", "workflow_dispatch", "true", false, ["1.0.36-dev-sha-deadbee-cli"]],
     ] as const)("derives publication metadata for manifest %s on %s", (version, ref, event, dryRun, push, tags) => {
         const metadata = workflow("cli-docker.yml").jobs.metadata.steps?.find((step) => step.id === "meta");

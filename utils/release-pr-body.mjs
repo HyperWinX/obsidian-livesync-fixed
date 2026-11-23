@@ -41,15 +41,6 @@ export function renderReleasePrBody(version, baseBranch) {
     const purpose = isPrerelease
         ? `an immutable pre-release for BRAT validation without replacing the latest stable release`
         : `a stable version which will first be staged as a GitHub pre-release for BRAT validation`;
-    const finaliseInstruction = isPrerelease
-        ? "Run the finalise release workflow with this PR's fixed head SHA and `prerelease=true`"
-        : "Run the finalise release workflow with this PR's fixed head SHA, `prerelease=true`, and `publish_cli=false`";
-    const publicationInstruction = isPrerelease
-        ? "Publish the GitHub Release as a pre-release without replacing the latest stable release, while keeping this pull request in draft"
-        : "Publish the GitHub Release initially as a pre-release without replacing the latest stable release, while keeping this pull request in draft";
-    const assetInstruction = isPrerelease
-        ? "Confirm the draft GitHub Release assets and the published CLI image, if selected"
-        : "Confirm the draft GitHub Release assets; keep stable CLI publication deferred until BRAT validation passes";
     const holdInstruction = isPrerelease
         ? `Publishing and validating this pre-release does not unblock this pull request. Keep it in draft and unmerged, and leave ${baseBranchCode} unchanged.`
         : `Publishing the GitHub pre-release does not unblock this pull request. Keep it in draft, and leave ${baseBranchCode} unchanged, until the exact published build has passed BRAT validation. Before the exact release commit reaches the repository's default branch, remove the pre-release designation and make this exact release the latest stable release so Community Directory review does not inspect a manifest version whose GitHub Release remains a pre-release.`;
@@ -77,9 +68,10 @@ export function renderReleasePrBody(version, baseBranch) {
         "- [ ] Confirm the release date",
         "- [ ] Confirm `manifest.json`, `versions.json`, workspace package versions, and the locked Commonlib package version",
         "- [ ] Confirm CI has passed",
-        `- [ ] ${finaliseInstruction}`,
-        `- [ ] ${assetInstruction}`,
-        `- [ ] ${publicationInstruction}`,
+        `- [ ] Manually create and push the tag ${versionCode} at this pull request's reviewed head commit`,
+        "- [ ] Wait for the tagged CI run to pass and download its Obsidian plug-in artefact",
+        `- [ ] Manually create the GitHub Release for ${versionCode} and attach \`main.js\`, \`manifest.json\`, and \`styles.css\``,
+        "- [ ] Publish the GitHub Release as a pre-release without replacing the latest stable release",
         "- [ ] Validate the exact published release with BRAT",
         ...completionInstructions,
         "",

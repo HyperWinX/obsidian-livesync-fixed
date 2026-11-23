@@ -1,4 +1,3 @@
-# Run Unit test without Harnesses
 name: unit-ci
 
 on:
@@ -7,95 +6,29 @@ on:
     branches:
       - main
       - beta
-    paths:
-      - 'manifest.json'
-      - 'updates.md'
-      - 'src/**'
-      - 'test/**'
-      - '_tools/**'
-      - 'scripts/**'
-      - 'package.json'
-      - 'package-lock.json'
-      - 'tsconfig.json'
-      - 'vite.config.ts'
-      - 'vitest.config*.ts'
-      - 'esbuild.config.mjs'
-      - 'eslint.config.mjs'
-      - 'eslint.config.common.mjs'
-      - 'eslint.community.config.mjs'
-      - 'terser.config.mjs'
-      - 'update-workspaces.mjs'
-      - 'version-bump.mjs'
-      - 'utils/check-compatibility.js'
-      - 'utils/livesync-commonlib-version.test.ts'
-      - 'utils/livesync-commonlib-version.ts'
-      - 'utils/*ci*.unit.spec.ts'
-      - 'utils/cli-docker-*.mjs'
-      - 'utils/release-*.mjs'
-      - 'utils/release-*.unit.spec.ts'
-      - 'utils/couchdb/**'
-      - 'utils/flyio/**'
-      - 'utils/setup/**'
-      - '.github/workflows/prepare-release.yml'
-      - '.github/workflows/finalise-release.yml'
-      - '.github/workflows/release.yml'
-      - '.github/workflows/cli-node-tests.yml'
-      - '.github/workflows/cli-p2p-tests.yml'
-      - '.github/workflows/cli-docker-validation.yml'
-      - '.github/workflows/cli-docker.yml'
-      - '.github/workflows/unit-ci.yml'
+    tags:
+      - '[0-9]+.[0-9]+.[0-9]+*'
+      - '!*-cli'
   pull_request:
     types: [opened, synchronize, reopened, ready_for_review]
-    paths:
-      - 'manifest.json'
-      - 'updates.md'
-      - 'src/**'
-      - 'test/**'
-      - '_tools/**'
-      - 'scripts/**'
-      - 'package.json'
-      - 'package-lock.json'
-      - 'tsconfig.json'
-      - 'vite.config.ts'
-      - 'vitest.config*.ts'
-      - 'esbuild.config.mjs'
-      - 'eslint.config.mjs'
-      - 'eslint.config.common.mjs'
-      - 'eslint.community.config.mjs'
-      - 'terser.config.mjs'
-      - 'update-workspaces.mjs'
-      - 'version-bump.mjs'
-      - 'utils/check-compatibility.js'
-      - 'utils/livesync-commonlib-version.test.ts'
-      - 'utils/livesync-commonlib-version.ts'
-      - 'utils/*ci*.unit.spec.ts'
-      - 'utils/cli-docker-*.mjs'
-      - 'utils/release-*.mjs'
-      - 'utils/release-*.unit.spec.ts'
-      - 'utils/couchdb/**'
-      - 'utils/flyio/**'
-      - 'utils/setup/**'
-      - '.github/workflows/prepare-release.yml'
-      - '.github/workflows/finalise-release.yml'
-      - '.github/workflows/release.yml'
-      - '.github/workflows/cli-node-tests.yml'
-      - '.github/workflows/cli-p2p-tests.yml'
-      - '.github/workflows/cli-docker-validation.yml'
-      - '.github/workflows/cli-docker.yml'
-      - '.github/workflows/unit-ci.yml'
+
+concurrency:
+  group: unit-ci-${{ github.event_name }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 permissions:
   contents: read
 
 jobs:
   setup-tools:
-    if: ${{ github.event_name != 'pull_request' || !github.event.pull_request.draft }}
     name: Self-hosted setup tools
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
       - name: Checkout
         uses: actions/checkout@v5
+        with:
+          persist-credentials: false
 
       - name: Setup Node.js
         uses: actions/setup-node@v5
@@ -138,13 +71,14 @@ jobs:
         run: npm run test:docker-couchdb:stop || true
 
   unit-test:
-    if: ${{ github.event_name != 'pull_request' || !github.event.pull_request.draft }}
     name: Unit Tests
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
       - name: Checkout
         uses: actions/checkout@v5
+        with:
+          persist-credentials: false
 
       - name: Setup Node.js
         uses: actions/setup-node@v5
@@ -158,7 +92,15 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Validate tagged release metadata
+        if: github.ref_type == 'tag'
+        env:
+          RELEASE_VERSION: ${{ github.ref_name }}
+        run: node utils/release-notes.mjs validate "$RELEASE_VERSION"
+
       - name: Run source checks
+        env:
+          NODE_OPTIONS: --max-old-space-size=4096
         run: npm run check
 
       - name: Run release process tests
@@ -178,13 +120,14 @@ jobs:
           path: coverage/**
 
   integration-test:
-    if: ${{ github.event_name != 'pull_request' || !github.event.pull_request.draft }}
     name: Integration Tests
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
       - name: Checkout
         uses: actions/checkout@v5
+        with:
+          persist-credentials: false
 
       - name: Detect LiveSync-owned integration tests
         id: integration_tests
@@ -247,3 +190,45 @@ jobs:
         run: |
           npm run test:docker-couchdb:stop || true
           npm run test:docker-s3:stop || true
+
+  plugin-artifacts:
+    name: Upload Obsidian Plug-in Files
+    needs: [setup-tools, unit-test, integration-test]
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: '24.x'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build the production plug-in
+        run: npm run build
+
+      - name: Check that all plug-in files are present
+        run: |
+          for file in main.js manifest.json styles.css; do
+            if [[ ! -s "$file" ]]; then
+              echo "Missing or empty plug-in file: $file" >&2
+              exit 1
+            fi
+          done
+
+      - name: Upload plug-in files
+        uses: actions/upload-artifact@v6
+        with:
+          name: obsidian-plugin-${{ github.sha }}
+          if-no-files-found: error
+          path: |
+            main.js
+            manifest.json
+            styles.css

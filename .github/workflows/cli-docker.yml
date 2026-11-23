@@ -103,12 +103,10 @@ jobs:
                       TAGS="${IMAGE}:${VERSION}-dev-sha-${SHORT_SHA}-cli"
                   fi
 
-                  # Determine if the image should be pushed
-                  PUSH="true"
-                  if [[ "${EVENT_NAME}" == "workflow_dispatch" ]]; then
-                      if [[ "${DRY_RUN}" == "true" ]]; then
-                          PUSH="false"
-                      fi
+                  # Container publication requires an explicit manual run.
+                  PUSH="false"
+                  if [[ "${EVENT_NAME}" == "workflow_dispatch" && "${DRY_RUN}" == "false" ]]; then
+                      PUSH="true"
                   fi
 
                   echo "image=${IMAGE}" >> "$GITHUB_OUTPUT"
